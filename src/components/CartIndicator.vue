@@ -1,6 +1,6 @@
 <template>
-    <base-preloader-small v-if="cartLoading()"/>
-    <router-link class="header__cart" aria-label="Корзина с товарами" :to="{name: 'cart'}" v-else>
+    <!--<base-preloader-small v-if="cartLoading()"/>-->
+    <router-link class="header__cart" aria-label="Корзина с товарами" :to="{name: 'cart'}">
         <svg width="19" height="24">
           <use xlink:href="#icon-cart"></use>
         </svg>
@@ -10,10 +10,10 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import BasePreloaderSmall from '@/components/BasePreloaderSmall.vue';
+// import BasePreloaderSmall from '@/components/BasePreloaderSmall.vue';
 
 export default {
-  components: { BasePreloaderSmall },
+  // components: { BasePreloaderSmall },
   methods: { ...mapGetters({ cartPositions: 'cartTotalPositionsNumber', cartLoading: 'cartStillLoading' }) },
 };
 </script>

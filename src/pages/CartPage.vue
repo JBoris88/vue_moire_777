@@ -54,7 +54,7 @@
 
 <script>
 import numberFormat from '@/helpers/numberFormat';
-import decOfNum from '@/helpers/decOfNum';
+import pluralize from '@/helpers/pluralize';
 import { mapGetters } from 'vuex';
 import CartItem from '@/components/CartItem.vue';
 import BaseErrorBlock from '@/components/BaseErrorBlock.vue';
@@ -75,7 +75,7 @@ export default {
       countProducts: 'cartTotalPositionsNumber',
     }),    
     productNumerator() {
-      return `${numberFormat(this.countProducts)} ${decOfNum(this.countProducts, ['товар', 'товара', 'товаров'])}`;
+      return `${numberFormat(this.countProducts)} ${pluralize(this.countProducts, ['товар', 'товара', 'товаров'])}`;
     },
     formattedTotalSum() {
       return `${numberFormat(this.totalSum)} ₽`;

@@ -16,16 +16,33 @@
 
 <script>
 import numberFormat from '@/helpers/numberFormat';
-import decOfNum from '@/helpers/decOfNum';
+import pluralize from '@/helpers/pluralize';
 import OrderItem from '@/components/OrderItem.vue';
 
 export default {
   components: { OrderItem },
   filters: { numberFormat },  
-  props: ['orderItems', 'totalOrderItems', 'totalOrderSum', 'deliveryText'],
+  props: {
+    orderItems: {
+      type: Array,
+      required: true,
+    },
+    totalOrderItems: {
+      type: Number,
+      required: true,
+    }, 
+    totalOrderSum: {
+      type: Number,
+      required: true,
+    },
+    deliveryText: {
+      type: String,
+      default: '',
+    },           
+  },  
   computed: {
     productNumerator() {
-      return `${decOfNum(this.totalOrderItems, ['товар', 'товара', 'товаров'])}`;
+      return `${pluralize(this.totalOrderItems, ['товар', 'товара', 'товаров'])}`;
     },
   },
 };

@@ -40,7 +40,12 @@ function getTemplate(contentElements) {
 }
 
 export default {
-  props: ['tabElements'],
+  props: {
+    tabElements: {
+      type: Array,
+      required: true,
+    },
+  },  
   data() {
     return {
       currentTab: {},

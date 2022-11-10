@@ -18,7 +18,7 @@
 
             <base-color-radio-selector v-model="selectedColor" :colorsList="productItem.colorsOfProduct"/>
 
-            <base-preloader-small v-if="productAddSending"/>
+            <base-preloader v-if="productAddSendingPreloader"/>
             <product-size-chip-selector 
               :sizeList="productItemSizes"
               @product-size-selected="addToCart"
@@ -31,15 +31,17 @@
 </template>
 
 <script>
+import { API_PRELOADER_DELAY } from '@/config';
 import numberFormat from '@/helpers/numberFormat';
 import requestHandler from '@/helpers/storageRequestHandler';
 import BaseColorRadioSelector from '@/components/BaseColorRadioSelector.vue';
 import ProductSizeChipSelector from '@/components/ProductSizeChipSelector.vue';
-import BasePreloaderSmall from '@/components/BasePreloaderSmall.vue';
+import BasePreloader from '@/components/BasePreloader.vue';
 import { mapGetters, mapActions } from 'vuex';
+import { DialogToast } from 'v-dialogs';
 
 export default {
-  components: { BaseColorRadioSelector, ProductSizeChipSelector, BasePreloaderSmall },
+  components: { BaseColorRadioSelector, ProductSizeChipSelector, BasePreloader },
   props: {
     productItem: {
       type: Object,
@@ -53,6 +55,8 @@ export default {
       
       sizeSelector: false,
       productAddSending: false,
+
+      productAddSendingPreloader: false,
 
       formError: {},
       formErrorMessage: '',      
@@ -75,6 +79,23 @@ export default {
     showSizes() {
       return (this.productItemSizes.length > 0) && (this.sizeSelector);
     },
+  },
+  watch: {
+    productAddSending: {
+      handler() {
+        clearTimeout(this.productAddSendingTimeout);
+
+        if (this.productAddSending === false) {
+          this.productAddSendingPreloader = false;
+        } else {
+          clearTimeout(this.productAddSendingTimeout);
+          this.productAddSendingTimeout = setTimeout(() => {      
+            this.productAddSendingPreloader = true;     
+          }, API_PRELOADER_DELAY);
+        }
+      },
+      immediate: true,      
+    },    
   },
   created() {
     this.selectedColor = this.productItem.colorsOfProduct[0].id;
@@ -101,6 +122,23 @@ export default {
               amount: this.productAmount, 
             })
               .then((response) => {
+                if (Object.keys(response).length === 0 && response.constructor === Object) {
+                  DialogToast('Товар добавлен в корзину', {
+                    title: '',
+                    messageType: 'success',
+                    closeTime: 3,
+                    position: 'topCenter',
+                    icon: false,                  
+                  });
+                } else {
+                  DialogToast('Ошибка добавления товара', {
+                    title: '',
+                    messageType: 'error',
+                    closeTime: 3,
+                    position: 'topCenter',
+                    icon: false,                  
+                  });
+                }
                 this.formError = response;
               })
               .finally(() => { 

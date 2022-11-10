@@ -46,7 +46,12 @@ import eventBus from '@/eventBus';
 
 export default {
   components: { ProductCounter },
-  props: ['cartItem'],
+  props: {
+    cartItem: {
+      type: Object,
+      required: true,
+    },
+  },   
   data() {
     return {
       cartItemDeleting: false,

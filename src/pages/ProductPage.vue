@@ -1,5 +1,5 @@
 <template>
-  <main class="content container" v-if="productDetailLoading"><base-preloader/></main>
+  <main class="content container" v-if="productDetailLoadingPreloader"><base-preloader/></main>
   <main class="content container" v-else-if="productDetailLoadingFailed">Произошла ошибка при загрузке информации о товаре...<button @click.prevent="loadProduct">Повторить</button></main>
   <main class="content container" v-else>
     <div class="content__top">
@@ -55,7 +55,7 @@
             </div>
             
             <button class="item__button button button--primery" type="submit" :disabled="productAddSending">
-              <base-preloader-small v-if="productAddSending"/>
+              <base-preloader-small v-if="productAddSendingPreloader"/>
               {{cartProductValue}}
             </button>
 
@@ -63,12 +63,13 @@
         </div>
       </div>
 
-      <base-tab-module :tabElements="product.productDescriptions"/>     
+      <base-tab-pager-2 :tabElements="product.productDescriptions"/>     
     </section>
   </main>
 </template>
 
 <script>
+import { API_PRELOADER_DELAY, API_SMALLPRELOADER_DELAY } from '@/config';
 import numberFormat from '@/helpers/numberFormat';
 import requestHandler from '@/helpers/storageRequestHandler';
 import { mapGetters, mapActions } from 'vuex';
@@ -77,7 +78,7 @@ import ProductCounter from '@/components/ProductCounter.vue';
 import BaseColorRadioSelector from '@/components/BaseColorRadioSelector.vue';
 import ProductSizeSelector from '@/components/ProductSizeSelector.vue';
 import BasePictureWrapper from '@/components/BasePictureWrapper.vue';
-import BaseTabModule from '@/components/BaseTabModule.vue';
+import BaseTabPager2 from '@/components/BaseTabPager2.vue';
 import BaseErrorBlock from '@/components/BaseErrorBlock.vue';
 import BasePreloaderSmall from '@/components/BasePreloaderSmall.vue';
 
@@ -88,7 +89,7 @@ export default {
     BaseColorRadioSelector, 
     ProductSizeSelector, 
     BasePictureWrapper,
-    BaseTabModule,
+    BaseTabPager2,
     BaseErrorBlock,
     BasePreloaderSmall,
   }, 
@@ -100,7 +101,12 @@ export default {
 
       productDetailLoading: false,
       productDetailLoadingFailed: false,
+
+      productDetailLoadingPreloader: false,
+
       productAddSending: false,
+
+      productAddSendingPreloader: false,
 
       formError: {},
       formErrorMessage: '',
@@ -148,6 +154,36 @@ export default {
       },
       immediate: true,      
     },
+    productAddSending: {
+      handler() {
+        clearTimeout(this.productAddSendingTimeout);
+
+        if (this.productAddSending === false) {
+          this.productAddSendingPreloader = false;
+        } else {
+          clearTimeout(this.productAddSendingTimeout);
+          this.productAddSendingTimeout = setTimeout(() => {      
+            this.productAddSendingPreloader = true;     
+          }, API_SMALLPRELOADER_DELAY);
+        }
+      },
+      immediate: true,      
+    },
+    productDetailLoading: {
+      handler() {
+        clearTimeout(this.productDetailLoadingTimeout);
+
+        if (this.productDetailLoading === false) {
+          this.productDetailLoadingPreloader = false;
+        } else {
+          clearTimeout(this.productDetailLoadingTimeout);
+          this.productDetailLoadingTimeout = setTimeout(() => {      
+            this.productDetailLoadingPreloader = true;     
+          }, API_PRELOADER_DELAY);
+        }
+      },
+      immediate: true,      
+    },     
   },  
   methods: {
     ...mapActions({ 

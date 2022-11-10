@@ -1,5 +1,5 @@
 <template>
-  <main class="content container" v-if="orderInfoLoading"><base-preloader/></main>
+  <main class="content container" v-if="orderInfoLoadingPreloader"><base-preloader/></main>
   <main class="content container" v-else-if="orderInfoLoadingFailed">Произошла ошибка при загрузке информации о заказе...<button @click.prevent="loadOrderInfo">Повторить</button></main>
   <main class="content container" v-else>
     <div class="content__top">
@@ -50,6 +50,7 @@
 </template>
 
 <script>
+import { API_PRELOADER_DELAY } from '@/config';
 import requestHandler from '@/helpers/storageRequestHandler';
 import { mapGetters, mapActions } from 'vuex';
 import BasePreloader from '@/components/BasePreloader.vue';
@@ -66,6 +67,8 @@ export default {
     return {
       orderInfoLoading: false,
       orderInfoLoadingFailed: false,
+
+      orderInfoLoadingPreloader: false,
     };
   },  
   computed: {
@@ -82,6 +85,21 @@ export default {
       },
       immediate: true,
     },
+    orderInfoLoading: {
+      handler() {
+        clearTimeout(this.orderInfoLoadingTimeout);
+
+        if (this.orderInfoLoading === false) {
+          this.orderInfoLoadingPreloader = false;
+        } else {
+          clearTimeout(this.orderInfoLoadingTimeout);
+          this.orderInfoLoadingTimeout = setTimeout(() => {      
+            this.orderInfoLoadingPreloader = true;     
+          }, API_PRELOADER_DELAY);
+        }
+      },
+      immediate: true,      
+    },    
   },
   methods: {
     ...mapActions({ 

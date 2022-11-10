@@ -52,6 +52,10 @@ export default {
       type: Object,
       required: true,
     },
+    productFiltered: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -75,12 +79,7 @@ export default {
     },
     visibleResetFiltrationButton() {
       return (
-        this.currentPriceFrom > 0 
-        || this.currentPriceTo > 0
-        || this.currentCategoryId > 0
-        || this.currentColorsAspects.length > 0
-        || this.currentMaterialsAspects.length > 0
-        || this.currentCollectionAspects.length > 0
+        this.productFiltered
       );
     },
   },

@@ -10,7 +10,12 @@
 import numberFormat from '@/helpers/numberFormat';
 
 export default {
-  props: ['orderItem'],
+  props: {
+    orderItem: {
+      type: Object,
+      required: true,
+    },
+  },  
   computed: {
     formattedItemTotalSum() {
       return `${numberFormat(this.orderItem.itemTotalSum)} ₽`;

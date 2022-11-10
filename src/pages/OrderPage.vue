@@ -34,7 +34,7 @@
 
             <base-form-text v-model="formData.address" :error="formError.address" title="Адрес доставки" placeholder="Введите ваш адрес"/>
 
-            <base-form-text v-model="formData.phone" :error="formError.phone" title="Телефон" placeholder="Введите ваш телефон" type="phone"/>
+            <base-form-phone v-model="formData.phone" :error="formError.phone" title="Телефон" placeholder="Введите ваш телефон"/>
 
             <base-form-text v-model="formData.email" :error="formError.email" title="Email" placeholder="Введи ваш Email" type="email"/>
 
@@ -51,11 +51,11 @@
 
         <order-cart-block :orderItems = "orderItems" :totalOrderItems="totalOrderItems" :totalOrderSum="totalOrderSum" :deliveryText="deliverySumText">
           <template v-slot:preloader>
-            <base-preloader v-if="cartStillLoading"/>
+            <base-preloader v-if="cartStillLoadingPreloader"/>
           </template>
 
            <button class="cart__button button button--primery" type="submit" :disabled="orderCreationButtonDisabled">
-            <base-preloader-small v-show="orderCreation"/>
+            <base-preloader-small v-show="orderCreationPreloader"/>
             Оформить заказ
           </button>         
         </order-cart-block>
@@ -73,12 +73,14 @@
 </template>
 
 <script>
+import { API_PRELOADER_DELAY, API_SMALLPRELOADER_DELAY } from '@/config';
 import requestHandler from '@/helpers/storageRequestHandler';
 import { mapGetters, mapActions } from 'vuex';
 import BasePreloaderSmall from '@/components/BasePreloaderSmall.vue';
 import BasePreloader from '@/components/BasePreloader.vue';
 import BaseFormText from '@/components/BaseFormText.vue';
 import BaseFormTextarea from '@/components/BaseFormTextarea.vue';
+import BaseFormPhone from '@/components/BaseFormPhone.vue';
 import OrderCartBlock from '@/components/OrderCartBlock.vue';
 import BaseOptionSelector from '@/components/BaseOptionSelector.vue';
 
@@ -88,6 +90,7 @@ export default {
     BasePreloader,
     BaseFormText, 
     BaseFormTextarea,
+    BaseFormPhone,
     OrderCartBlock,
     BaseOptionSelector,    
   },
@@ -99,6 +102,14 @@ export default {
       selectedPayment: 0,
 
       orderCreation: false,
+      orderCreationPreloader: false,
+
+      cartStillLoadingPreloader: false,
+
+      orderOptions: [{
+        delivery: 0,
+        payment: 0,
+      }],
     };
   },
   computed: {
@@ -134,11 +145,53 @@ export default {
   watch: {  
     selectedDelivery: {
       handler() {
-        this.selectedPayment = 0;
+        const orderOption = this.orderOptions.find((x) => x.delivery === this.selectedDelivery);
+        this.selectedPayment = orderOption ? orderOption.payment : 0;
+        this.loadPaymentTypes(this.selectedDelivery);
+      },
+      immediate: true,      
+    },
+    selectedPayment: {
+      handler() {
+        this.orderOptions = this.orderOptions.filter((f) => (f.delivery !== this.selectedDelivery));
+        this.orderOptions.push({
+          delivery: this.selectedDelivery,
+          payment: this.selectedPayment,
+        });
         this.loadPaymentTypes(this.selectedDelivery);
       },
       immediate: true,      
     },  
+    orderCreation: {
+      handler() {
+        clearTimeout(this.orderCreationTimeout);
+
+        if (this.orderCreation === false) {
+          this.orderCreationPreloader = false;
+        } else {
+          clearTimeout(this.orderCreationTimeout);
+          this.orderCreationTimeout = setTimeout(() => {      
+            this.orderCreationPreloader = true;     
+          }, API_SMALLPRELOADER_DELAY);
+        }
+      },
+      immediate: true,      
+    },
+    cartStillLoading: {
+      handler() {
+        clearTimeout(this.cartStillLoadingTimeout);
+
+        if (this.cartStillLoading === false) {
+          this.cartStillLoadingPreloader = false;
+        } else {
+          clearTimeout(this.cartStillLoadingTimeout);
+          this.cartStillLoadingTimeout = setTimeout(() => {      
+            this.cartStillLoadingPreloader = true;     
+          }, API_PRELOADER_DELAY);
+        }
+      },
+      immediate: true,      
+    },    
   },  
   methods: {
     ...mapActions({ 

@@ -19,11 +19,12 @@
 
     <div class="content__catalog">      
       <product-filter 
-        :productParams="filterProductParams" 
+        :productParams="filterProductParams"
+        :productFiltered ="filterApplied" 
         @aply-product-filter="applyProductFilter"/>
 
       <section class="catalog">
-        <base-preloader v-if="productsLoading"/>
+        <base-preloader v-if="productsLoadingPreloader"/>
         <div v-if="productsLoadingFailed">Произошла ошибка при загрузке списка товаров...<button @click.prevent="loadProducts">Повторить</button> </div>
 
         <product-list :products="products"/>
@@ -35,8 +36,9 @@
 </template>
 
 <script>
+import { API_PRELOADER_DELAY } from '@/config';
 import numberFormat from '@/helpers/numberFormat';
-import decOfNum from '@/helpers/decOfNum';
+import pluralize from '@/helpers/pluralize';
 import requestHandler from '@/helpers/storageRequestHandler';
 import { mapGetters, mapActions } from 'vuex';
 import BasePagination from '@/components/BasePagination.vue';
@@ -64,11 +66,14 @@ export default {
         filterCategoryId: 0,
         filterColorsAspects: [],      
         filterMaterialsAspects: [],
-        filterCollectionAspects: [],
+        filterCollectionAspects: [],        
       },
+      filterApplied: false,
 
       productsLoading: false,
       productsLoadingFailed: false,
+
+      productsLoadingPreloader: false,
     };
   },
   computed: {
@@ -79,7 +84,15 @@ export default {
       catalogProductsPerPageDafault: 'catalogProductsPerPageDafault',
     }),    
     productNumerator() {
-      return `${numberFormat(this.countProducts)} ${decOfNum(this.countProducts, ['товар', 'товара', 'товаров'])}`;
+      return `${numberFormat(this.countProducts)} ${pluralize(this.countProducts, ['товар', 'товара', 'товаров'])}`;
+    },
+    filterSignable() {
+      return (this.filterProductParams.filterPriceFrom > 0 
+                  || this.filterProductParams.filterPriceTo > 0
+                  || this.filterProductParams.filterCategoryId > 0
+                  || this.filterProductParams.filterColorsAspects.length > 0
+                  || this.filterProductParams.filterMaterialsAspects.length > 0
+                  || this.filterProductParams.filterCollectionAspects.length > 0);
     },
   },
   watch: {
@@ -95,6 +108,21 @@ export default {
     currentPage() {
       this.loadProducts();
     },
+    productsLoading: {
+      handler() {
+        clearTimeout(this.productsLoadingTimeout);
+
+        if (this.productsLoading === false) {
+          this.productsLoadingPreloader = false;
+        } else {
+          clearTimeout(this.productsLoadingTimeout);
+          this.productsLoadingTimeout = setTimeout(() => {      
+            this.productsLoadingPreloader = true;     
+          }, API_PRELOADER_DELAY);
+        }
+      },
+      immediate: true,      
+    },     
   },
   created() {
     this.productsPerPage = this.catalogProductsPerPageDafault;
@@ -115,10 +143,19 @@ export default {
     loadProducts() {
       this.productsLoading = true;
       this.productsLoadingFailed = false;
+      this.filterApplied = false;
+
       requestHandler()
         .then(() => {
           this.loadCatalogProducts({ ...this.filterProductParams, currentPage: this.currentPage, productsPerPage: this.productsPerPage })      
-            .catch(() => { this.productsLoadingFailed = true; })
+            .then(() => { 
+              if (this.filterSignable) {
+                this.filterApplied = true; 
+              }
+            })
+            .catch(() => { 
+              this.productsLoadingFailed = true; 
+            })
             .finally(() => { this.productsLoading = false; });
         });
     },
