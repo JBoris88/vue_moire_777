@@ -63,7 +63,7 @@
         </div>
       </div>
 
-      <base-tab-pager-2 :tabElements="product.productDescriptions"/>     
+      <base-tab-pager-2 :tabElements="productDescriptions"/>     
     </section>
   </main>
 </template>
@@ -133,6 +133,9 @@ export default {
       }
 
       return 'В корзину';
+    },
+    productDescriptions() {
+      return this.product.productDescriptions ?? [];
     },
   },  
   watch: {
